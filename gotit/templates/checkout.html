@@ -1,0 +1,67 @@
+{% extends "base_layout.html" %}
+{% load static %}
+
+{% block body %}
+<div class="container">
+	<h1> Cart </h1>
+	{% for product in products %}
+	<hr><br>
+
+	<div class="card">
+		<h3 class="card-title">
+			{{ product.name }}
+		</h3>
+		<div class="card card-text">
+			{{ product.price }}
+		</div>
+		<form method="POST">
+			{% csrf_token %}
+			<input type="number" name="pid" value="{{ product.product_id }}" hidden>
+			<button class="btn btn-secondary">Delete</button>
+		</form>
+	</div>
+	{% endfor %}
+	<div class="text-center">
+		<br><br>
+		<button class="btn btn-primary mx-auto" id="checkout"> Checkout</button>
+	</div>
+</div>
+<script type="text/javascript">
+	// Razor Pay
+	var options = {
+	    "key": "{{ razor_api_key }}",
+	    "amount": "{% widthratio amount 1 100 %}", 
+	    "currency": "{{currency}}",
+	    "order_id": "{{ order_id }}", 
+	    "handler": function (response){
+	        // alert(response.razorpay_payment_id);
+	        // alert(response.razorpay_order_id);
+	        // alert(response.razorpay_signature)
+	    },
+	    "prefill": {
+	        "name": "{{user.first_name}} {{user.last_name}}",
+	        "email": "{{user.email}}",
+	        "contact": "{{user.contact_no}}"
+	    },
+	    "theme": {
+	        "color": "#3399cc"
+	    }
+	};
+	var rzp1 = new Razorpay(options);
+	rzp1.on('payment.failed', function (response){
+	        // alert(response.error.code);
+	        // alert(response.error.description);
+	        // alert(response.error.source);
+	        // alert(response.error.step);
+	        // alert(response.error.reason);
+	        // alert(response.error.metadata.order_id);
+	        // alert(response.error.metadata.payment_id);
+	});
+	document.getElementById('pay_item').onclick = function(e){
+	    rzp1.open();
+	    e.preventDefault();
+	}
+
+
+</script>
+{% endblock %}

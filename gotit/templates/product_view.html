@@ -1,0 +1,176 @@
+{% extends "base_layout.html" %}
+{% load static %}
+
+{% block body %}
+<link rel="stylesheet" type="text/css" href="{% static 'product.css' %}">
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script type="text/javascript">
+	document.addEventListener('DOMContentLoaded', () => {
+	var small_imgs = document.getElementsByClassName('small_images');
+	for (var i = 0; i < small_imgs.length; i++) {
+	    small_imgs[i].addEventListener('click', (bt) => {
+	    var l = (String)(bt.target.dataset['num']);
+	    var main = document.getElementById('main_img');
+	    var src = "/static/images/{{ product.product_id}}_" + l + '.' +(main.src.split('.')[main.src.split('.').length-1]);
+	    console.log(src);
+	    main.src=src;
+	});
+	}
+
+	// Razor Pay
+	var options = {
+	    "key": "{{razor_api_key}}",
+	    "amount": "{% widthratio product.price 1 100 %}", 
+	    "currency": "{{ currency }}",
+	    "order_id": "{{ order_id }}", 
+	    "handler": function (response){
+	        // alert(response.razorpay_payment_id);
+	        // alert(response.razorpay_order_id);
+	        // alert(response.razorpay_signature)
+	    },
+	    "prefill": {
+	        "name": "{{user.first_name}} {{user.last_name}}",
+	        "email": "{{user.email}}",
+	        "contact": "{{user.contact_no}}"
+	    },
+	    "theme": {
+	        "color": "#3399cc"
+	    }
+	};
+	var rzp1 = new Razorpay(options);
+	rzp1.on('payment.failed', function (response){
+	        // alert(response.error.code);
+	        // alert(response.error.description);
+	        // alert(response.error.source);
+	        // alert(response.error.step);
+	        // alert(response.error.reason);
+	        // alert(response.error.metadata.order_id);
+	        // alert(response.error.metadata.payment_id);
+	});
+	document.getElementById('pay_item').onclick = function(e){
+	    rzp1.open();
+	    e.preventDefault();
+	}
+
+
+
+	document.getElementById('add_to_cart').onclick = function(){
+		const xhr = new XMLHttpRequest({mozSystem : true});
+		xhr.onload = () => {
+	    if (xhr.status == 200) {
+	        // parse JSON data
+	        console.log(JSON.parse(xhr.response));
+	    } 
+	    else 
+	    {
+	        console.error('Error!');
+	    }
+	};
+		xhr.open('GET', '/add_to_cart/{{ product.product_id }}');
+		xhr.send()
+	}
+
+})
+</script>
+	<div class="container">
+		<br><br><br>
+		<div id="top_third" class="d-flex">
+			<div id="images" class="flex-row mb-4 " style="width:50%;">
+				<img id="main_img" src="{{ main_image }}">
+				<br><br>
+				{% for img in images %}
+				<img class="small_images" src="{{ img.src }}" data-num="{{ img.num }}">
+				{% endfor %}
+			</div>
+			<div id="name_rating_price_buy" class="flex-row mb-4">
+				<div id="name" class="flex-column">
+					<h1>{{product.name}}</h1>
+				</div>
+				<div id="rating" class="flex-column">
+					<h3>{{ product.rating }}/5</h3>
+				</div>
+				<div id="price" class="flex-column">
+					<h4>{{ product.price }}</h4>
+				</div>
+				<div id="buy" class="flex-column">
+					<button class="btn btn-primary" id="pay_item">Buy</button>
+					<button class="btn btn-primary" id="add_to_cart">Add to cart</button>
+				</div>
+			</div>
+		</div>
+		<hr>
+		<div id="second_third" class="">
+			<!-- reviews -->
+			<div id="reviews">
+				{% for review in product.reviews.reviews %}
+				<div class="card">
+					<div class="card-body">
+						review.review
+					</div>
+					<div class="card-footer text-center">
+						{{review.rating}}
+					</div>
+					
+				</div>
+				{% endfor %}
+			</div>
+			<br>
+			<div>
+				{% if reviewed %}
+				<div class="alert alert-primary">
+					Already rated
+				</div>
+				{% else %}
+				<form method="POST">
+					<div class="form-check form-check-inline">
+						<input class="form-check-input" type="radio" name="rating" id="inlineRadio1" value="1">
+						<label class="form-check-label" for="inlineRadio1">1</label>
+					</div>
+					<div class="form-check form-check-inline">
+						<input class="form-check-input" type="radio" name="rating" id="inlineRadio2" value="2">
+						<label class="form-check-label" for="inlineRadio2">2</label>
+					</div>
+					<div class="form-check form-check-inline">
+						<input class="form-check-input" type="radio" name="rating" id="inlineRadio3" value="3">
+						<label class="form-check-label" for="inlineRadio3">3</label>
+					</div>
+					<div class="form-check form-check-inline">
+						<input class="form-check-input" type="radio" name="rating" id="inlineRadio4" value="4">
+						<label class="form-check-label" for="inlineRadio4">4</label>
+					</div>
+					<div class="form-check form-check-inline">
+						<input class="form-check-input" type="radio" name="rating" id="inlineRadio5" value="5">
+						<label class="form-check-label" for="inlineRadio5">5</label>
+					</div>
+					<input type="text" name="review" class="form-control mb-4" placeholder="Review(Optional)">
+					<button type="submit" class="btn btn-primary"> Post</button>
+				</form>
+				{% endif %}
+			</div>
+		</div>
+		<hr>
+		<div id="third">
+			<!-- information and description -->
+			<div id="description">
+				<h2>Description</h2>
+				<br>
+				<p>{{ product.description }}</p>
+			</div>
+			<hr>
+			<div id="information">
+				<h2>Information</h2>
+				<table class="table">
+					<tbody>
+						{% for head,body in product.extra_details.items %}
+						<th class="table-secondary">{{ head }}</th>
+						<td>{{ body }}</td>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	<br><br>
+	</div>
+
+{% endblock %}

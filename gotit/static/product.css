@@ -1,0 +1,14 @@
+#main_img
+{
+	max-width: 80%;
+}
+
+.small_images
+{
+	max-width: 12%;
+}
+
+.small_images:hover
+{
+	opacity: 0.8;
+}

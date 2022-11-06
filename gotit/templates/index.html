@@ -1,0 +1,20 @@
+{% extends 'base_layout.html' %}
+
+{% block body %}
+<div class="container">
+<br>
+    {% for product in products_n %}
+        <!-- <div class="card"> -->
+    <div class="card" style="width: 18rem;">
+        <a href="/product/{{product.product_id }}">
+        <img class="card-img-top" src="{{product.base_img}}" alt="Card image cap">
+        <div class="card-body">
+            <h5 class="card-title">{{product.name}}</h5>
+            <p class="card-text text-muted">{{product.price}}</p>
+        </div>
+        </a>
+    </div>            
+        <!-- </div> -->
+    {% endfor %}
+</div>
+{% endblock %}
